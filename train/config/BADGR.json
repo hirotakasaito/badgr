@@ -1,0 +1,16 @@
+{
+    "data_types": [
+        "obs",
+        "acs",
+        "pos",
+        "lidar",
+        "imu"
+    ],
+    "//collision_safety_limit": 0.3,
+    "//bumpiness_limit": 10.0,
+    "collision_safety_limit": 1.0,
+    "bumpiness_limit": 12.0,
+    "data_len": 8,
+    "collision_upper_bound":0.3,
+    "collision_lower_bound":2.0
+}

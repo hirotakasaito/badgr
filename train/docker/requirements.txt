@@ -1,0 +1,7 @@
+torch
+torchvision
+tqdm
+tensorboardX
+opencv-python
+matplotlib
+cnn_finetune
