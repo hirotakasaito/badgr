@@ -3,8 +3,7 @@
         "obs",
         "acs",
         "pos",
-        "lidar",
-        "imu"
+        "lidar"
     ],
     "//collision_safety_limit": 0.3,
     "//bumpiness_limit": 10.0,

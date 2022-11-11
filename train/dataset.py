@@ -152,7 +152,7 @@ class FullDataset(BaseDataset):
 
     def __getitem__(self, index):
 
-        data_types = ("obs", "acs", "pos", "lidar", "imu")
+        data_types = ("obs", "acs", "pos", "lidar")
         data = self.generate_output_data(data_types, index)
 
         return data

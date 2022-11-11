@@ -5,14 +5,9 @@ import pprint
 from glob import iglob
 
 def main():
-    #print("\n" + "==== Add dataset to con")
-
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset",type=str,default="/root/dataset/sq2/d_kan1/badgr4hz/")
-    parser.add_argument("--output-file",type=str,default="/root/BADGR/config/badgr_dirs.json")
-    # parser.add_argument("--dataset",type=str,default="/share/private/27th/hirotaka_saito/dataset/recon/")
-    # parser.add_argument("--output-file",type=str,default="./config/rssm.json")
-
+    parser.add_argument("--dataset",type=str,default="/root/dataset/sq2/d_kan1/badgr10hz21/")
+    parser.add_argument("--output-file",type=str,default="/root/badgr/config/badgr_dirs.json")
     parser.add_argument("--datasets-name",type=str,default = "d_kan1")
     parser.add_argument("--data-len",type=int,default=30)
     args = parser.parse_args()
@@ -53,7 +48,6 @@ def main():
     if overwrite:
         with open(args.output_file,mode='wt', encoding='utf-8') as f:
             json.dump(data,f,indent=4)
-            #config_file = json.load(f)
 
 if __name__ == "__main__":
     main()
