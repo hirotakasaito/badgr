@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<launch>
+    <node pkg="badgr" name="model_base_planner" type="model_base_planner.py" output="screen"/>
+
+    <include file="$(find local_goal_creator)/launch/local_goal_creator.launch" />
+
+    <node pkg="rosbag" type="play" name="player" output="screen" args="--clock /home/amsl/catkin_ws/src/model_base_planner/bagfiles/2022-07-18-18-59-10.bag"/>
+    <!-- rviz -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d /home/amsl/catkin_ws/src/badgr/config/test.rviz"/>
+</launch>
+

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+
+<launch>
+    <node pkg="badgr" name="mppi_planner_dwa" type="mppi_planner_dwa.py" />
+</launch>
+

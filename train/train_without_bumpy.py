@@ -87,7 +87,7 @@ def train(model, device, dataloader, optimizer, col_loss_fn, pose_loss_fn, epoch
         pos_img_np = np.asarray(pos_img).transpose(2,0,1)
     return mean_loss/step, mean_pose_loss/step, mean_col_loss/step, pos_img_np
 
-def test_model(model, device, col_loss_fn, pose_loss_fn, bumpy_loss_fn, testloader):
+def test_model(model, device, col_loss_fn, pose_loss_fn, testloader):
     model.eval()
     with torch.no_grad():
         val_loss = 0
@@ -140,13 +140,13 @@ def main():
 
     parser = argparse.ArgumentParser(description='Python script for Training')
     parser.add_argument('--epoch', default=100, type=int, help='number of epoch')
-    parser.add_argument("--batch_size", type=int, default=8)
-    parser.add_argument('--lr', default=3e-4, type=float, help='learning rate')
+    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument('--lr', default=3e-5, type=float, help='learning rate')
     parser.add_argument('--test_ratio', default=0.9, type=float, help='split ratio')
 
     parser.add_argument('--dataset_dir', type=str, default='d_kan1')
     parser.add_argument('--input_size', default=224, type=int, help='size of input image')
-    parser.add_argument('--test_interval', default=5, type=int, help='test interval')
+    parser.add_argument('--test_interval', default=10, type=int, help='test interval')
     parser.add_argument('--image_log_interval', default=1, type=int, help='pose image view interval')
 
     parser.add_argument('--log_dir', default='/root/logs/badgr', help='dir_name of log for')
