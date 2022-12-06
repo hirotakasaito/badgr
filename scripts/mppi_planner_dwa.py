@@ -8,6 +8,7 @@ import rospy
 import cv2
 import tf
 import torchvision.transforms.functional as TF
+import math
 
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Point, PointStamped, PoseStamped, PoseWithCovarianceStamped, Twist
@@ -24,7 +25,7 @@ class MPPIPlanner():
         Deep Dynamics Models for Learning Dexterous Manipulation.
         arXiv preprint arXiv:1909.11652.
     """
-    def __init__(self, model):
+    def __init__(self,):
         super(MPPIPlanner, self).__init__()
 
         rospy.init_node('mppi_dwa', anonymous=True)
@@ -34,6 +35,7 @@ class MPPIPlanner():
         self.pred_len = rospy.get_param("~PREDITCT_TIME", 21)
         self.kappa = rospy.get_param("~KAPPA", 50)
         self.dt= rospy.get_param("~DT", 0.1)
+        self.model_path = rospy.get_param("~MODEL_PATH", "/home/amsl/catkin_ws/src/badgr/logs/221113000000/")
 
 
         self.cuda = 0
@@ -44,13 +46,14 @@ class MPPIPlanner():
             print("GPU使用")
 
         # model
-        self.model = model
+        # self.model = model
 
         self.input_size = 2
         self.action = np.zeros(2)
         self.goal = torch.rand(2, dtype=torch.float32).to(self.device)
         self.pose = np.zeros(3)
         self.local_goal = torch.rand(2, dtype=torch.float32).to(self.device)
+
 
         # mppi parameters
         self.pop_size = 0
@@ -92,7 +95,6 @@ class MPPIPlanner():
         #print(trajecties[0])
         for i in range(self.pop_size):
             marker_data = Marker()
-            # marker_data.header.frame_id = "base_link"
             marker_data.header.frame_id = "base_link"
             marker_data.header.stamp = rospy.Time.now()
             marker_data.type = 4 #LINE_STRIP
@@ -173,31 +175,23 @@ class MPPIPlanner():
 
         # est_pose = trajs[:,:,0:2]
         # est_pose = torch.from_numpy(est_pose.astype(np.float32)).clone().to(self.device)
+
         cmd_vel = torch.from_numpy(cmd_vel.astype(np.float32)).clone().to(self.device)
 
-        curr_x = curr_x.repeat(self.pop_size,1,1,1,1)
+        curr_x = curr_x.repeat(self.pop_size,1,1,1)
 
-        est_collision, est_collision_yaw, est_pose,est_yaw = self.model.prediction(curr_x, cmd_vel,self.pred_len,self.pop_size)
+        est_collision, est_pose = self.model.prediction(curr_x, cmd_vel)
+        est_collision, _ = self.model.prediction(curr_x, cmd_vel)
+        est_pose = est_pose[:,:,:2]
 
-        est_collision_yaw = torch.abs(1. / ((est_yaw + (self.pi/2)) - est_collision_yaw))
-        est_collision_yaw = est_collision_yaw.reshape(self.pop_size, -1)
-        cost_collision_yaw = (est_collision_yaw - torch.min(est_collision_yaw)) / (torch.max(est_collision_yaw) - torch.min(est_collision_yaw))
-
-        est_pose = est_pose.permute(1,0,2)
+        # est_pose = est_pose.permute(1,0,2)
         trajs = est_pose.to('cpu').detach().numpy().copy()
-
 
         est_collision = est_collision.reshape(self.pop_size, -1)
         est_collision = torch.clamp(est_collision, min=0.02, max=1-0.02)
         cost_collision = (est_collision - 0.02) / (1. - 2 * 0.02)
 
-        # cost_speed = 1/(cmd_vel[:,:,0] + 1)
-        # cost_speed_max = torch.max(cost_speed)
-        # cost_speed = cost_speed / cost_speed_max * .1 #0.1 speed param
-        # print(cost_speed)
-
-        # est_pose = est_pose[:,:-1]
-        est_pose = est_pose.reshape(self.pop_size, self.pred_len, -1)
+        # est_pose = est_pose.reshape(self.pop_size, self.pred_len, -1)
 
         g_xs = g_xs.repeat(self.pop_size,self.pred_len, 1)
 
@@ -210,17 +204,8 @@ class MPPIPlanner():
         cost_position = (1. / self.pi) * torch.abs(theta)
 
         cost_position = (1. - cost_collision) * cost_position + cost_collision * 1.
-        # cost_collision_yaw = (1. - cost_collision) * cost_collision_yaw + cost_collision * 1.
-        # cost_bumpy = (1. - cost_collision) * cost_bumpy + cost_collision * 1.
 
-        # cost_speed = (1. - cost_collision) * cost_speed + cost_collision * 1.
-
-        # return cost_collision + cost_position + cost_bumpy
-        # return cost_position, trajs
-        # return cost_collision_yaw, trajs
-        return cost_position + cost_collision + cost_collision_yaw, trajs
-        # return cost_position + cost_collision, trajs
-        # return cost_position,trajs
+        return cost_position + cost_collision, trajs
 
     def get_costs(self, curr_x, g_xs, trajs):
         #noised_inputs = self.get_noised_action()
@@ -277,16 +262,17 @@ class MPPIPlanner():
 
         return cmd_vel, trajs
 
-    def process(self,):
+    def process(self, model):
         r = rospy.Rate(self.HZ)
         selected_cmd_vel = Twist()
         self.local_goal[0] = 4.0
         self.local_goal[1] = 0.0
+        self.model = model
 
         while not rospy.is_shutdown():
             if(self.received_local_goal and self.received_camera_data):
-                    self.local_goal[0] = 4.0
-                    self.local_goal[1] = 0.0
+                    # self.local_goal[0] = 4.0
+                    # self.local_goal[1] = 0.0
 
                     cmd_vel,trajs = self.create_pose_cmd_vel()
                     cmd_vel = torch.from_numpy(cmd_vel.astype(np.float32)).clone().to(self.device)
@@ -349,10 +335,10 @@ class MPPIPlanner():
 
 if __name__ == '__main__':
 
-    # test code
-    model = RSSMWithAttentionModel()
-    planner = MPPIPlanner(model)
+    planner = MPPIPlanner()
+    model = Badgr(planner.model_path)
+    # planner = MPPIPlanner(model)
     try:
-        planner.process()
+        planner.process(model)
     except rospy.ROSInterruptException:
         pass

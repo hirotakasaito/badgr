@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <launch>
-    <node pkg="badgr" name="model_base_planner" type="model_base_planner.py" output="screen"/>
+    <node pkg="badgr" name="badgr" type="mppi_planner_dwa.py" output="screen"/>
 
     <include file="$(find local_goal_creator)/launch/local_goal_creator.launch" />
 
